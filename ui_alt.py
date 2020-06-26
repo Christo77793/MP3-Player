@@ -21,8 +21,8 @@ Major components of the 'root_var' are STATUS_BAR, LEFT_FRAME, RIGHT_FRAME
 
 # Status Bar
 username = getpass.getuser()  # We use the getpass module to get the name of the current user
-# status_bar = ttk.Label(root_var, text="Welcome " + username, relief=SUNKEN, anchor=SW)
-status_bar = ttk.Label(root_var, text="Welcome Christopher" , relief=SUNKEN, anchor=SW)
+status_bar = ttk.Label(root_var, text="Welcome " + username, relief=SUNKEN, anchor=SW)
+# status_bar = ttk.Label(root_var, text="Welcome Christopher" , relief=SUNKEN, anchor=SW)
 status_bar.pack(side=BOTTOM, fill=X)
 
 mixer.init()  # Initializing the mixer module
@@ -69,7 +69,7 @@ sub_menu.add_command(label="Exit", command=root_var.destroy)  # Creating a sub m
 
 # Defining a fn to display the following message on clicking About from Help
 def about_us():
-    messagebox.showinfo("About *ENTER SOFTWARE NAME*", '''*ENTER SOFTWARE NAME* is a simple audio player, that was developed as a learning project.
+    messagebox.showinfo("About MP3 Player", '''MP3 Player is a simple audio player, that was developed as a learning project.
     Created By:- 
         Christopher J.S.
     If you wish to make a contribution to this software, email me at christo77793@gmail.com''')
@@ -109,7 +109,7 @@ del_song_btn.pack(side=RIGHT, padx=35)
 
 # Audio details
 audio_length = ttk.Label(top_frame, text="MP3 Player")  # Displays audio length in the play fn
-audio_length.pack(pady=5)
+audio_length.pack(pady=15)
 
 remaining_audio_time = ttk.Label(top_frame, text="")  # Displays the current time of the audio
 remaining_audio_time.pack()
