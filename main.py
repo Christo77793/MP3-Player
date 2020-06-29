@@ -1,4 +1,4 @@
-import os, time, threading
+import os, time, threading, getpass
 from mutagen.mp3 import MP3
 from tkinter import *
 from tkinter import filedialog, messagebox, ttk
@@ -7,7 +7,8 @@ from pygame import mixer
 
 # GUI creation
 root_var = themetk.ThemedTk()  # Setting the the theme
-root_var.get_themes()
+
+# root_var.get_themes()
 # root_var.set_theme("")
 
 root_var.title("MP3 Player")  # Program name (title on GUI)
@@ -20,9 +21,9 @@ Major components of the 'root_var' are STATUS_BAR, LEFT_FRAME, RIGHT_FRAME
 """
 
 # Status Bar
-status_bar = Label(root_var, text="Welcome to this player", relief=SUNKEN, anchor=SW)
-status_bar.pack(side=BOTTOM, fill=X)
-
+username = getpass.getuser()  # We use the getpass module to get the name of the current user
+status_bar = ttk.Label(root_var, text="Welcome " + username, relief=SUNKEN, anchor=SW)
+# status_bar = ttk.Label(root_var, text="Welcome Christopher" , relief=SUNKEN, anchor=SW)
 mixer.init()  # Initializing the mixer module
 
 # Menu Bar
@@ -93,7 +94,7 @@ top_frame.pack()
 
 playlist_array = []
 
-playlist_box = Listbox(right_frame, bd=0, background="gray")
+playlist_box = Listbox(right_frame, bd=0, background="lightgray")
 playlist_box.pack()
 
 add_song_icon = PhotoImage(file=r"Images/add_song.png")  # Adding an icon for the add songs button
@@ -105,7 +106,36 @@ del_song_btn = Button(right_frame, image=del_song_icon, bd=0, command=del_file) 
 del_song_btn.pack(side=RIGHT, pady=9, padx=15)
 
 
-# Audio details
+# Defining a fn to repeat songs
+change_repeat_song_icon = False
+
+
+def rep_song():
+    global change_repeat_song_icon
+    if not change_repeat_song_icon:
+        rep_song_btn.configure(image=rep_song_on_icon)
+        change_repeat_song_icon = True
+        if not mixer.music.get_busy():
+            play_button(-1)
+        else:
+            pass
+    else:
+        rep_song_btn.configure(image=rep_song_off_icon)
+        change_repeat_song_icon = False
+        if not mixer.music.get_busy():
+            play_button(0)
+        else:
+            pass
+
+
+# Repeat button
+rep_song_off_icon = PhotoImage(file=r"Images/repeat_off.png")  # Adding an icon for the repeat song button
+rep_song_on_icon = PhotoImage(file=r"Images/repeat_on.png")  # Adding an icon for the repeat song button
+rep_song_btn = Button(right_frame, image=rep_song_off_icon, bd=0, command=rep_song)  # A button to delete songs from the list
+rep_song_btn.pack(pady=9)
+
+# Audio file details
+
 audio_length = Label(top_frame, text="MP3 Player")  # Displays audio length in the play fn
 audio_length.pack(pady=5)
 
@@ -127,8 +157,8 @@ def audio_details(to_play):
     mins, secs = divmod(file_time_span, 60)
     mins = round(mins)
     secs = round(secs)
-    time_format = "{:02d}:{:02d}".format(mins, secs)
-    audio_length["text"] = "Audio Length:- " + time_format
+    total_time_format = "{:02d}:{:02d}".format(mins, secs)
+    audio_length["text"] = "Audio Length:- " + total_time_format
 
     # Applying the concept of threads to isolate the execution of the while loop in the start_count fn
     t1 = threading.Thread(target=start_count, args=(file_time_span,))
@@ -146,14 +176,16 @@ def start_count(test):
             mins, secs = divmod(current_time, 60)
             mins = round(mins)
             secs = round(secs)
-            time_format = "{:02d}:{:02d}".format(mins, secs)
-            remaining_audio_time["text"] = "Currently at- " + time_format
+            current_time_format = "{:02d}:{:02d}".format(mins, secs)
+            remaining_audio_time["text"] = "Currently at- " + current_time_format
             time.sleep(1)
             current_time += 1
+    remaining_audio_time["text"] = ""
+    audio_length["text"] = "MP3 Player"
 
 
 # Defining a button to play music
-def play_button():
+def play_button(repeat):
     global to_un_pause, paused, check_val
     if to_un_pause:
         mixer.music.unpause()  # Resumes the music from when it was paused
@@ -163,12 +195,13 @@ def play_button():
     else:
         try:
             mixer.music.stop()
+            audio_length["text"] = "MP3 Player"
             time.sleep(1)
             selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
             selected_song = int(selected_song[0])  # Converts tuple to int
             to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
             mixer.music.load(to_play)
-            mixer.music.play()
+            mixer.music.play(repeat)
             audio_details(to_play)
             check_val = True
             paused = True
@@ -208,10 +241,12 @@ def stop_button():
         status_bar["text"] = "No music is being played to stop!"
 
 
+"""
 # Defining a button to rewind music
 def rewind_button():
     play_button()
     status_bar["text"] = "Rewinding!"  # Setting the status as stopped
+"""
 
 
 # Defining a scale to control the volume level
@@ -244,7 +279,7 @@ middle_frame.pack(padx=35, pady=35)
 
 # Play button
 play_icon = PhotoImage(file=r"Images/play-button.png")  # Adding an icon for the play button
-play_btn = Button(middle_frame, image=play_icon, bd=0, command=play_button)  # Adding the play button
+play_btn = Button(middle_frame, image=play_icon, bd=0, command=lambda: play_button(0))  # Adding the play button
 play_btn.grid(row=0, column=0, padx=15)
 
 # Pause button
@@ -260,12 +295,14 @@ stop_btn.grid(row=0, column=2, padx=15)
 # Creating a bottom frame
 bottom_frame = Frame(left_frame)
 bottom_frame.pack()
+
 """
 # Rewind button
 rewind_icon = PhotoImage(file=r"Images/rewind-button.png")  # Adding an icon for the rewind button
 rewind_btn = Button(bottom_frame, image=rewind_icon, bd=0, command=rewind_button)  # Adding the stop button
 rewind_btn.grid(row=0, column=0)
 """
+
 # Mute/Un-mute Button
 mute_icon = PhotoImage(file=r"Images/mute-button.png")  # Adding an icon for the mute button
 un_mute_icon = PhotoImage(file=r"Images/un-mute-button.png")  # Adding an icon for the un-mute button

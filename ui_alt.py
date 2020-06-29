@@ -7,8 +7,9 @@ from pygame import mixer
 
 # GUI creation
 root_var = themetk.ThemedTk()  # Setting the the theme
-root_var.get_themes()
-root_var.set_theme("breeze")
+
+root_var.get_themes()  # Retrieving the available themes from themed_tk
+root_var.set_theme("breeze")  # Setting the breeze theme to the UI
 
 root_var.title("MP3 Player")  # Program name (title on GUI)
 root_var.iconbitmap(r"Icons/music_note.ico")  # Setting an icon & it's location
@@ -107,7 +108,8 @@ del_song_btn = ttk.Button(right_frame, image=del_song_icon, command=del_file)  #
 del_song_btn.pack(side=RIGHT, padx=35)
 
 
-# Audio details
+# Audio file details
+
 audio_length = ttk.Label(top_frame, text="MP3 Player")  # Displays audio length in the play fn
 audio_length.pack(pady=15)
 
@@ -157,7 +159,7 @@ def start_count(test):
 
 
 # Defining a button to play music
-def play_button():
+def play_button(repeat):
     global to_un_pause, paused, check_val
     if to_un_pause:
         mixer.music.unpause()  # Resumes the music from when it was paused
@@ -213,10 +215,12 @@ def stop_button():
         status_bar["text"] = "No music is being played to stop!"
 
 
+"""
 # Defining a button to rewind music
 def rewind_button():
     play_button()
     status_bar["text"] = "Rewinding!"  # Setting the status as stopped
+"""
 
 
 # Defining a scale to control the volume level
@@ -249,7 +253,7 @@ middle_frame.pack(padx=35, pady=35)
 
 # Play button
 play_icon = PhotoImage(file=r"Images/play-button.png")  # Adding an icon for the play button
-play_btn = ttk.Button(middle_frame, image=play_icon, command=play_button)  # Adding the play button
+play_btn = ttk.Button(middle_frame, image=play_icon, command=lambda: play_button(0))  # Adding the play button
 play_btn.grid(row=0, column=0, padx=15)
 
 # Pause button
@@ -265,12 +269,14 @@ stop_btn.grid(row=0, column=2, padx=15)
 # Creating a bottom frame
 bottom_frame = ttk.Frame(left_frame)
 bottom_frame.pack()
+
 """
 # Rewind button
 rewind_icon = PhotoImage(file=r"Images/rewind-button.png")  # Adding an icon for the rewind button
 rewind_btn = ttk.Button(bottom_frame, image=rewind_icon, command=rewind_button)  # Adding the stop button
 rewind_btn.grid(row=0, column=0)
 """
+
 # Mute/Un-mute Button
 mute_icon = PhotoImage(file=r"Images/mute-button.png")  # Adding an icon for the mute button
 un_mute_icon = PhotoImage(file=r"Images/un-mute-button.png")  # Adding an icon for the un-mute button
