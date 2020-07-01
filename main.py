@@ -12,7 +12,7 @@ root_var = themetk.ThemedTk()  # Setting the the theme
 # root_var.set_theme("")
 
 root_var.title("MP3 Player")  # Program name (title on GUI)
-root_var.iconbitmap(r"Icons/MP3 Player.ico")  # Setting an icon & it's location
+root_var.iconbitmap(r"Icons/music_note.ico")  # Setting an icon & it's location
 
 """
 Major components of the 'root_var' are STATUS_BAR, LEFT_FRAME, RIGHT_FRAME
@@ -108,24 +108,42 @@ del_song_btn.pack(side=RIGHT, pady=9, padx=15)
 
 # Defining a fn to repeat songs
 change_repeat_song_icon = False
+temp = False
 
 
 def rep_song():
-    global change_repeat_song_icon
+    global change_repeat_song_icon, temp
     if not change_repeat_song_icon:
         rep_song_btn.configure(image=rep_song_on_icon)
         change_repeat_song_icon = True
-        if not mixer.music.get_busy():
-            play_button(-1)
-        else:
-            pass
+        temp = True
     else:
         rep_song_btn.configure(image=rep_song_off_icon)
         change_repeat_song_icon = False
-        if not mixer.music.get_busy():
-            play_button(0)
-        else:
+        temp = False
+    t2 = threading.Thread(target=check_rep)
+    t2.start()
+
+
+def check_rep():
+    while temp:
+        if mixer.music.get_busy():
             pass
+        else:
+            loop_song()
+        if not temp:
+            unloop_song()
+            break
+
+
+def loop_song():
+    # Get the remaining time and then use time.sleep()
+    mixer.music.play(-1)
+
+
+def unloop_song():
+    # Get the remaining time and then use time.sleep()
+    mixer.music.play(0)
 
 
 # Repeat button

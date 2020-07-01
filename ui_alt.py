@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox, ttk
 from ttkthemes import themed_tk as themetk
 from pygame import mixer
 
+
 # GUI creation
 root_var = themetk.ThemedTk()  # Setting the the theme
 
