@@ -107,43 +107,69 @@ del_song_btn.pack(side=RIGHT, pady=9, padx=15)
 
 
 # Defining a fn to repeat songs
-change_repeat_song_icon = False
-temp = False
+change_repeat_song_icon = False  # a variable to change repeat icon
+check_var = False  # a variable to break the while loop
 
 
 def rep_song():
-    global change_repeat_song_icon, temp
+    global change_repeat_song_icon, check_var
     if not change_repeat_song_icon:
         rep_song_btn.configure(image=rep_song_on_icon)
         change_repeat_song_icon = True
-        temp = True
+        check_var = True
     else:
         rep_song_btn.configure(image=rep_song_off_icon)
         change_repeat_song_icon = False
-        temp = False
-    t2 = threading.Thread(target=check_rep)
+        check_var = False
+    t2 = threading.Thread(target=check_rep)  # Running an isolated thread to loop music
     t2.start()
 
 
-def check_rep():
-    while temp:
+def check_rep():  # A function to loop music and reverse it
+    while check_var:  # loop to continuously play music repeatedly
         if mixer.music.get_busy():
             pass
         else:
             loop_song()
-        if not temp:
-            unloop_song()
+        if not check_var:
+            test = get_time()
+            unloop_song(test)
             break
 
 
 def loop_song():
-    # Get the remaining time and then use time.sleep()
-    mixer.music.play(-1)
+    play_button(-1)
 
 
-def unloop_song():
-    # Get the remaining time and then use time.sleep()
-    mixer.music.play(0)
+def get_time():
+    selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
+    selected_song = int(selected_song[0])  # Converts tuple to int
+    to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
+
+    file_extension = os.path.splitext(to_play)
+
+    if file_extension[1] == ".mp3":
+        sound_file = MP3(to_play)
+        file_time_span = sound_file.info.length
+    else:
+        sound_file = mixer.Sound(to_play)
+        file_time_span = sound_file.get_length()
+
+    total_length = file_time_span
+
+    currently_at = mixer.music.get_pos()
+    currently_at /= 1000
+    currently_at = int(currently_at)
+
+    remaining_time = total_length - currently_at
+    remaining_time = int(remaining_time)
+
+    return remaining_time
+
+
+def unloop_song(get_audio_time):
+    time.sleep(get_audio_time)
+    mixer.music.stop()
 
 
 # Repeat button
