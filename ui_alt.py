@@ -97,8 +97,12 @@ top_frame.pack()
 
 playlist_array = []
 
-playlist_box = Listbox(right_frame, width=25, bd=0, background="lightgray")
-playlist_box.pack(pady=15, padx=25)
+playlist_box_scrollbar = ttk.Scrollbar(right_frame, orient=VERTICAL)  # Creating a scrollbar for the playlist
+
+playlist_box = Listbox(right_frame, width=29, bd=0, background="lightgray", yscrollcommand=playlist_box_scrollbar.set)
+playlist_box_scrollbar.config(command=playlist_box.yview)  # Configuring the scrollbar
+playlist_box_scrollbar.pack(side=RIGHT, fill=Y)
+playlist_box.pack()
 
 add_song_icon = PhotoImage(file=r"Images/add_song.png")  # Adding an icon for the add songs button
 add_song_btn = ttk.Button(right_frame, image=add_song_icon, command=select_file)  # A button to add songs to the list
