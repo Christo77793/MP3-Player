@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import filedialog, messagebox, ttk
 from ttkthemes import themed_tk as themetk
 from pygame import mixer
+from tinytag import TinyTag
 
 # GUI creation
 root_var = themetk.ThemedTk()  # Setting the the theme
@@ -22,8 +23,10 @@ Major components of the 'root_var' are STATUS_BAR, LEFT_FRAME, RIGHT_FRAME
 
 # Status Bar
 username = getpass.getuser()  # We use the getpass module to get the name of the current user
-status_bar = ttk.Label(root_var, text="Welcome " + username, relief=SUNKEN, anchor=SW)
-# status_bar = ttk.Label(root_var, text="Welcome Christopher" , relief=SUNKEN, anchor=SW)
+# status_bar = Label(root_var, text="Welcome " + username, anchor=SW)
+status_bar = Label(root_var, text="Welcome Christopher", anchor=SW)
+status_bar.pack(side=BOTTOM, fill=X)
+
 mixer.init()  # Initializing the mixer module
 
 # Menu Bar
@@ -96,7 +99,7 @@ playlist_array = []
 
 playlist_box_scrollbar = Scrollbar(right_frame, orient=VERTICAL)  # Creating a scrollbar for the playlist
 
-playlist_box = Listbox(right_frame, bd=0, background="lightgray", yscrollcommand=playlist_box_scrollbar.set)
+playlist_box = Listbox(right_frame, width=25, background="lightgray", bd=0, yscrollcommand=playlist_box_scrollbar.set)
 playlist_box_scrollbar.config(command=playlist_box.yview)
 playlist_box_scrollbar.pack(side=RIGHT, fill=Y)
 playlist_box.pack()
@@ -110,7 +113,7 @@ del_song_btn = Button(right_frame, image=del_song_icon, bd=0, command=del_file) 
 del_song_btn.pack(side=RIGHT, pady=9, padx=15)
 
 
-# Defining a fn to repeat songs
+# Defining a set of functions to repeat songs
 change_repeat_song_icon = False  # a variable to change repeat icon
 check_var = False  # a variable to break the while loop
 
@@ -184,8 +187,8 @@ rep_song_btn.pack(pady=9)
 
 # Audio file details
 
-audio_length = Label(top_frame, text="MP3 Player")  # Displays audio length in the play fn
-audio_length.pack(pady=5)
+audio_length = Label(top_frame, text="Click the add button to add a song!")  # Displays audio length in the play fn
+audio_length.pack(pady=5, padx=5)
 
 remaining_audio_time = Label(top_frame, text="")  # Displays the current time of the audio
 remaining_audio_time.pack()
@@ -250,10 +253,13 @@ def play_button(repeat):
             to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
             mixer.music.load(to_play)
             mixer.music.play(repeat)
+            song_metadata = TinyTag.get(to_play)
+            bitrate = song_metadata.bitrate
+            song_offset = song_metadata.audio_offset
             audio_details(to_play)
             check_val = True
             paused = True
-            status_bar["text"] = "Currently Playing:- " + os.path.basename(to_play)  # Setting the status as the music is being played
+            status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
 
         except Exception:
             # Since no file has been selected the following code will be executed
