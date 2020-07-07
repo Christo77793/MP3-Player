@@ -85,11 +85,11 @@ sub_menu.add_command(label="About", command=about_us)  # Creating a sub menu wit
 
 # Creating frames to improve design of our GUI
 
-right_frame = ttk.Frame(root_var)  # Left Frame
+right_frame = ttk.Frame(root_var)  # Right Frame
 right_frame.pack(side=RIGHT)
 
-left_frame = ttk.Frame(root_var)  # Right Frame
-left_frame.pack()
+left_frame = ttk.Frame(root_var)  # Left Frame
+left_frame.pack(side=LEFT)
 
 top_frame = ttk.Frame(left_frame)  # Top Frame
 top_frame.pack()
@@ -145,8 +145,15 @@ def check_rep():  # A function to loop music and reverse it
             break
 
 
+allow_repeat = False
+
+
 def loop_song():
-    play_button(-1)
+    global allow_repeat
+    if allow_repeat:
+        play_button(-1)
+    else:
+        pass
 
 
 def get_time():
@@ -176,8 +183,10 @@ def get_time():
 
 
 def unloop_song(get_audio_time):
+    global allow_repeat
     time.sleep(get_audio_time)
-    mixer.music.stop()
+    stop_button()
+    allow_repeat = False
 
 
 # Repeat button
@@ -239,12 +248,17 @@ def start_count(test):
 
 # Defining a button to play music
 def play_button(repeat):
-    global to_un_pause, paused, check_val
+    global to_un_pause, paused, check_val, allow_repeat
     if to_un_pause:
         mixer.music.unpause()  # Resumes the music from when it was paused
         to_un_pause = False
-        status_bar[
-            "text"] = os.path.basename(filename) + " has been resumed!"  # Setting the status as the music is being played
+        selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
+        selected_song = int(selected_song[0])  # Converts tuple to int
+        to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
+        song_metadata = TinyTag.get(to_play)
+        bitrate = song_metadata.bitrate
+        song_offset = song_metadata.audio_offset
+        status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
     else:
         try:
             mixer.music.stop()
@@ -261,6 +275,7 @@ def play_button(repeat):
             audio_details(to_play)
             check_val = True
             paused = True
+            allow_repeat = True
             status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
 
         except Exception:
@@ -291,18 +306,10 @@ def stop_button():
     global check_val
     if check_val:
         mixer.music.stop()
-        status_bar["text"] = "You have stopped the song!"  # Setting the status as stopped
+        status_bar["text"] = "Music Stopped!"  # Setting the status as stopped
     else:
         # Setting the status to show nothing is being played if user hits stop when no music is being played
         status_bar["text"] = "No music is being played to stop!"
-
-
-"""
-# Defining a button to rewind music
-def rewind_button():
-    play_button()
-    status_bar["text"] = "Rewinding!"  # Setting the status as stopped
-"""
 
 
 # Defining a scale to control the volume level
@@ -350,14 +357,23 @@ stop_btn.grid(row=0, column=2, padx=15)
 
 # Creating a bottom frame
 bottom_frame = ttk.Frame(left_frame)
-bottom_frame.pack()
+bottom_frame.pack(padx=15)
 
-"""
+
+# Defining a button to restart music
+restart_time = False
+
+
+def rewind_button():
+    global restart_time
+    restart_time = True
+    mixer.music.rewind()
+
+
 # Rewind button
-rewind_icon = PhotoImage(file=r"Images/rewind-button.png")  # Adding an icon for the rewind button
+rewind_icon = PhotoImage(file=r"Images/restart-button.png")  # Adding an icon for the rewind button
 rewind_btn = ttk.Button(bottom_frame, image=rewind_icon, command=rewind_button)  # Adding the stop button
-rewind_btn.grid(row=0, column=0)
-"""
+rewind_btn.grid(row=0, column=0, padx=15)
 
 # Mute/Un-mute Button
 mute_icon = PhotoImage(file=r"Images/mute-button.png")  # Adding an icon for the mute button
