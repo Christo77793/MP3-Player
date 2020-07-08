@@ -63,6 +63,17 @@ def del_file():
     playlist_array.pop(selected_song)
 
 
+# A fn to clear the user's song history log
+def clear_history():
+    clear_file = r"History/Song History.txt"
+    with open(clear_file, "r+") as file:
+        file.seek(22)
+        file.truncate()
+        file.seek(21)
+        file.write("\n")
+        file.seek(0)
+
+
 # Sub Menu Bar
 sub_menu = Menu(menu_bar, tearoff=0)  # Initializing a sub menu (no#1)
 menu_bar.add_cascade(label="File", menu=sub_menu)  # Creating a bar with the name 'File', and it has a sub menu
@@ -229,26 +240,34 @@ def audio_details(to_play):
 
 # Defining a function to display the current time of the audio
 def start_count(test):
-    global to_un_pause
+    global to_un_pause, restart_time
     current_time = 0
     while current_time <= test and mixer.music.get_busy():
         if to_un_pause:
             continue
         else:
+            if restart_time:
+                current_time = 0
+                restart_time = False
+            else:
+                pass
             mins, secs = divmod(current_time, 60)
             mins = round(mins)
             secs = round(secs)
-            time_format = "{:02d}:{:02d}".format(mins, secs)
-            remaining_audio_time["text"] = "Currently at- " + time_format
+            current_time_format = "{:02d}:{:02d}".format(mins, secs)
+            remaining_audio_time["text"] = "Currently at- " + current_time_format
             time.sleep(1)
             current_time += 1
     remaining_audio_time["text"] = ""
-    audio_length["text"] = "MP3 Player"
+    audio_length["text"] = "Last played song:- " + os.path.basename(to_play)
 
 
 # Defining a button to play music
+# global to_play
+
+
 def play_button(repeat):
-    global to_un_pause, paused, check_val, allow_repeat
+    global to_un_pause, paused, check_val, allow_repeat, to_play
     if to_un_pause:
         mixer.music.unpause()  # Resumes the music from when it was paused
         to_un_pause = False
@@ -262,10 +281,10 @@ def play_button(repeat):
     else:
         try:
             mixer.music.stop()
-            audio_length["text"] = "MP3 Player"
             time.sleep(1)
             selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
             selected_song = int(selected_song[0])  # Converts tuple to int
+
             to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
             mixer.music.load(to_play)
             mixer.music.play(repeat)
@@ -276,7 +295,12 @@ def play_button(repeat):
             check_val = True
             paused = True
             allow_repeat = True
-            status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
+            song_heard = song_counter()
+            if song_heard > 1:
+                status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(
+                    song_offset) + " | You have heard this song " + str(song_heard) + " times"
+            else:
+                status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
 
         except Exception:
             # Since no file has been selected the following code will be executed
@@ -292,7 +316,7 @@ def pause_button():
     global to_un_pause
     to_un_pause = True
     mixer.music.pause()
-    status_bar["text"] = "The song has been paused!"  # Setting the status as paused
+    status_bar["text"] = "Music paused!"  # Setting the status as paused
     if not paused:
         # Code to handle the case, in which the user intentionally or not pauses first without playing any music
         status_bar["text"] = "No music is being played to pause!"
@@ -306,7 +330,9 @@ def stop_button():
     global check_val
     if check_val:
         mixer.music.stop()
-        status_bar["text"] = "Music Stopped!"  # Setting the status as stopped
+        status_bar["text"] = "Music stopped!"  # Setting the status as stopped
+        audio_length["text"] = "Last played song:- " + os.path.basename(to_play)
+        remaining_audio_time["text"] = ""
     else:
         # Setting the status to show nothing is being played if user hits stop when no music is being played
         status_bar["text"] = "No music is being played to stop!"
@@ -368,6 +394,21 @@ def rewind_button():
     global restart_time
     restart_time = True
     mixer.music.rewind()
+
+
+# Function to list number of times a song was heard {displays only if the count is > 1}
+def song_counter():
+    repeated_count = 0  # A variable to get the count of the no of times the user has heard a song
+    count_file = r"History/Song History.txt"
+    with open(count_file, "r+") as file:
+        content = file.read()
+        exact_file_name = os.path.basename(to_play)
+        if exact_file_name in content:
+            repeated_count = content.count(exact_file_name)
+            file.write(exact_file_name + "\n")
+        else:
+            file.write(exact_file_name + "\n")
+    return repeated_count
 
 
 # Rewind button
