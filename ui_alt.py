@@ -38,21 +38,16 @@ root_var.config(menu=menu_bar)
 # Defining a function to browse and select a file from the user's desktop
 def select_file():
     global filename
-    filename = filedialog.askopenfilename()
+    index = 0
+    filename = filedialog.askopenfilenames()
     if filename is not "":
-        exact_filename = os.path.basename(filename)  # Exact filename without the path
-        add_to_playlist(exact_filename)
+        for file_path in filename:
+            exact_filename = os.path.basename(file_path)  # Exact filename without the path
+            playlist_box.insert(index, exact_filename)  # Adding the file to the playlist in the GUI
+            playlist_array.insert(index, file_path)  # Adding the file path to the playlist array
+            index += 1
     else:
         print("Did not select a file when user went to browse!")
-
-
-# Defining a function to add files to the playlist box
-def add_to_playlist(received_file_name):
-    index = 0
-    playlist_box.insert(index, received_file_name)  # Adding the file to the playlist in the GUI
-    playlist_array.insert(index, filename)  # Adding the file path to the playlist array
-    playlist_box.pack()
-    index += 1
 
 
 # Defining a function to delete files from the playlist box
@@ -78,6 +73,7 @@ def clear_history():
 sub_menu = Menu(menu_bar, tearoff=0)  # Initializing a sub menu (no#1)
 menu_bar.add_cascade(label="File", menu=sub_menu)  # Creating a bar with the name 'File', and it has a sub menu
 sub_menu.add_command(label="Open", command=select_file)  # Creating a sub menu with the name 'Open'
+sub_menu.add_command(label="Clear History", command=clear_history)  # Creating a sub menu to clear song history log
 sub_menu.add_command(label="Exit", command=root_var.destroy)  # Creating a sub menu with the name 'Exit'
 
 
@@ -263,42 +259,49 @@ def start_count(test):
 
 
 # Defining a button to play music
-# global to_play
+song_heard = 0
 
 
 def play_button(repeat):
-    global to_un_pause, paused, check_val, allow_repeat, to_play
+    global to_un_pause, paused, check_val, allow_repeat, to_play, song_heard
     if to_un_pause:
         mixer.music.unpause()  # Resumes the music from when it was paused
         to_un_pause = False
+
         selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
         selected_song = int(selected_song[0])  # Converts tuple to int
         to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
+
         song_metadata = TinyTag.get(to_play)
         bitrate = song_metadata.bitrate
         song_offset = song_metadata.audio_offset
-        status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
+
+        if song_heard > 1:
+            status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset) + " | You have heard this song " + str(song_heard) + " times"
+        else:
+            status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
     else:
         try:
             mixer.music.stop()
             time.sleep(1)
+
             selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
             selected_song = int(selected_song[0])  # Converts tuple to int
-
             to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
             mixer.music.load(to_play)
             mixer.music.play(repeat)
+
             song_metadata = TinyTag.get(to_play)
             bitrate = song_metadata.bitrate
             song_offset = song_metadata.audio_offset
             audio_details(to_play)
+
             check_val = True
             paused = True
             allow_repeat = True
             song_heard = song_counter()
             if song_heard > 1:
-                status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(
-                    song_offset) + " | You have heard this song " + str(song_heard) + " times"
+                status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset) + " | You have heard this song " + str(song_heard) + " times"
             else:
                 status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
 
