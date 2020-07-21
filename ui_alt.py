@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox, ttk
 from ttkthemes import themed_tk as themetk
 from pygame import mixer
 from tinytag import TinyTag
+from PyLyrics import *
 
 
 # GUI creation
@@ -15,17 +16,19 @@ root_var.set_theme("breeze")  # Setting the breeze theme to the UI
 
 root_var.title("MP3 Player")  # Program name (title on GUI)
 root_var.iconbitmap(r"Icons/music_note.ico")  # Setting an icon & it's location
+root_var.resizable(False, False)  # Users are locked from altering the GUI size
 
 """
-Major components of the 'root_var' are STATUS_BAR, LEFT_FRAME, RIGHT_FRAME
-    *RIGHT FRAME -> PlayList
-    *LEFT FRAME -> TOP_FRAME, MIDDLE_FRAME, BOTTOM_FRAME  
+Major components of the 'root_var' are STATUS_BAR, FIRST_FRAME, SECOND_FRAME, THIRD_FRAME
+    *FIRST_FRAME -> # something
+    *SECOND_FRAME -> TOP_FRAME, MIDDLE_FRAME, BOTTOM_FRAME
+    *THIRD_FRAME -> PlayList 
 """
 
 # Status Bar
 username = getpass.getuser()  # We use the getpass module to get the name of the current user
-status_bar = ttk.Label(root_var, text="Welcome " + username, anchor=SW)
-# status_bar = ttk.Label(root_var, text="Welcome Christopher" , anchor=SW)
+status_bar = Label(root_var, text="Welcome Christopher", anchor=SW)
+# status_bar = ttk.Label(root_var, text="Welcome " + username, anchor=SW)
 status_bar.pack(side=BOTTOM, fill=X)
 
 mixer.init()  # Initializing the mixer module
@@ -62,11 +65,11 @@ def del_file():
 def clear_history():
     clear_file = r"History/Song History.txt"
     with open(clear_file, "r+") as file:
-        file.seek(22)
-        file.truncate()
-        file.seek(21)
-        file.write("\n")
         file.seek(0)
+        file.truncate()
+        file.write("## SONGS HISTORY LOG\n")
+        file.write("\n")
+        file.seek(22)
 
 
 # Sub Menu Bar
@@ -80,45 +83,131 @@ sub_menu.add_command(label="Exit", command=root_var.destroy)  # Creating a sub m
 # Defining a fn to display the following message on clicking About from Help
 def about_us():
     messagebox.showinfo("About MP3 Player", '''MP3 Player is a simple audio player, that was developed as a learning project.
-    Created By:- 
-        Christopher J.S.
+    Created By:- Christopher J.S.
     If you wish to make a contribution to this software, email me at christo77793@gmail.com''')
+
+
+def lyrics_help():
+    messagebox.showinfo("Lyrics FAQ", '''I used the PyLyrics module to display lyrics.
+    Website:- https://lyrics.fandom.com/wiki/LyricWiki
+    If no lyrics are shown despite the spelling being correct, look up for the song and artist name from the above website and try again.''')
 
 
 # Sub Menu Bar
 sub_menu = Menu(menu_bar, tearoff=0)  # Initializing a sub menu (no#2)
 menu_bar.add_cascade(label="Help", menu=sub_menu)  # Creating a bar with the name 'Help', and it has a sub menu
 sub_menu.add_command(label="About", command=about_us)  # Creating a sub menu with the name 'About'
+sub_menu.add_command(label="Lyrics", command=lyrics_help)  # Creating a sub menu with the name 'Lyrics'
 
-# Creating frames to improve design of our GUI
+# Creating frames to improve design of the GUI
+# first_frame
+# second_frame
+# third_frame
 
-right_frame = ttk.Frame(root_var)  # Right Frame
-right_frame.pack(side=RIGHT)
+first_frame = ttk.Frame(root_var)  # First Frame
+first_frame.pack(side=LEFT, padx=15)
 
-left_frame = ttk.Frame(root_var)  # Left Frame
-left_frame.pack(side=LEFT)
+# Creating the lyric box
 
-top_frame = ttk.Frame(left_frame)  # Top Frame
-top_frame.pack()
+lyrics_option_frame = ttk.Frame(first_frame)  # Creating a separate frame to store user interactive options such as search or remove lyrics
+lyrics_option_frame.pack(side=BOTTOM)
+
+singer_name = ttk.Label(lyrics_option_frame, text="Artist Name:")  # A label for the singer's name
+singer_name.grid(row=0, column=0, pady=15, padx=15)
+
+singer_name_input = ttk.Entry(lyrics_option_frame, background="lightgray")  # An entry to get singer's name
+singer_name_input.grid(row=0, column=1, pady=15, padx=15)
+
+singer_song = ttk.Label(lyrics_option_frame, text="Song Name:")  # A label for the singer's song's name
+singer_song.grid(row=1, column=0, padx=15)
+
+singer_song_input = ttk.Entry(lyrics_option_frame, background="lightgray")  # An entry to get singer's song's name
+singer_song_input.grid(row=1, column=1, padx=15)
+
+song_lyrics = "Please be connected to the internet to view lyrics!"
+
+
+def show_lyrics():
+    global song_lyrics
+    artist_name = singer_name_input.get()
+    artist_song = singer_song_input.get()
+
+    if song_lyrics is not "":
+        song_lyrics = ""
+        lyric_box.config(state=NORMAL)
+        lyric_box.delete(1.0, END)
+        lyric_box.config(state=DISABLED)
+
+    try:
+        song_lyrics = PyLyrics.getLyrics(artist_name, artist_song)
+        status_bar["text"] = "Lyrics found!"
+    except ValueError:
+        song_lyrics = "Please be connected to the internet to view lyrics!"
+        status_bar["text"] = "Lyrics not found, recheck spelling!"
+
+    lyric_box.config(state=NORMAL)
+    lyric_box.insert(END, song_lyrics)
+    lyric_box.config(state=DISABLED)  # Users cannot edit textbox
+
+
+search = ttk.Button(lyrics_option_frame, text="Search Lyrics", command=show_lyrics)  # A button to show lyrics
+search.grid(row=2, column=0, pady=25)
+
+
+def remove_lyrics():
+    global song_lyrics
+    song_lyrics = "Please be connected to the internet to view lyrics!"
+    lyric_box.config(state=NORMAL)
+    lyric_box.delete(1.0, END)
+    lyric_box.insert(END, song_lyrics)
+    lyric_box.config(state=DISABLED)  # Users cannot edit textbox
+    status_bar["text"] = "Lyrics removed!"
+
+
+remove = ttk.Button(lyrics_option_frame, text="Remove Lyrics", command=remove_lyrics)  # A button to remove lyrics
+remove.grid(row=2, column=1, pady=25)
+
+lyric_label = ttk.Label(first_frame, text="Enter the name of a song and it's artist to see it's lyrics")
+lyric_label.pack(pady=15, padx=5)
+
+lyric_box_scrollbar = ttk.Scrollbar(first_frame, orient=VERTICAL)
+lyric_box = Text(first_frame, height=15, width=36, background="lightgray", bd=0, yscrollcommand=lyric_box_scrollbar.set)
+lyric_box_scrollbar.config(command=lyric_box.yview)
+lyric_box_scrollbar.pack(side=RIGHT, fill=Y)
+lyric_box.pack(pady=25, padx=5)
+
+lyric_box.config(state=NORMAL)
+lyric_box.insert(END, song_lyrics)
+lyric_box.config(state=DISABLED)  # Users cannot edit textbox
+
+
+third_frame = ttk.Frame(root_var)  # Third Frame
+third_frame.pack(side=RIGHT, padx=15)
+
+second_frame = ttk.Frame(root_var)  # Second Frame
+second_frame.pack(padx=15)
+
 
 # Creating a playlist
 
 playlist_array = []
 
-playlist_box_scrollbar = ttk.Scrollbar(right_frame, orient=VERTICAL)  # Creating a scrollbar for the playlist
-
-playlist_box = Listbox(right_frame, width=25, bd=0, background="lightgray", selectbackground="gray", selectforeground="black", yscrollcommand=playlist_box_scrollbar.set)
+playlist_box_scrollbar = ttk.Scrollbar(third_frame, orient=VERTICAL)  # Creating a scrollbar for the playlist
+playlist_box = Listbox(third_frame, height=13, width=35, bd=0, background="lightgray", selectbackground="gray", selectforeground="black", yscrollcommand=playlist_box_scrollbar.set)
 playlist_box_scrollbar.config(command=playlist_box.yview)  # Configuring the scrollbar
 playlist_box_scrollbar.pack(side=RIGHT, fill=Y)
-playlist_box.pack()
+playlist_box.pack(pady=5, padx=5)
+
+playlist_label = ttk.Label(third_frame, text="Your playlist")
+playlist_label.pack(pady=5, padx=5)
 
 add_song_icon = PhotoImage(file=r"Images/add_song.png")  # Adding an icon for the add songs button
-add_song_btn = ttk.Button(right_frame, image=add_song_icon, command=select_file)  # A button to add songs to the list
-add_song_btn.pack(side=LEFT, pady=9, padx=15)
+add_song_btn = ttk.Button(third_frame, image=add_song_icon, command=select_file)  # A button to add songs to the list
+add_song_btn.pack(side=LEFT, pady=5, padx=25)
 
 del_song_icon = PhotoImage(file=r"Images/del_song.png")  # Adding an icon for the delete songs button
-del_song_btn = ttk.Button(right_frame, image=del_song_icon, command=del_file)  # A button to delete songs from the list
-del_song_btn.pack(side=RIGHT, pady=9, padx=15)
+del_song_btn = ttk.Button(third_frame, image=del_song_icon, command=del_file)  # A button to delete songs from the list
+del_song_btn.pack(side=RIGHT, pady=5, padx=25)
 
 
 # Defining a fn to repeat songs
@@ -199,9 +288,12 @@ def unloop_song(get_audio_time):
 # Repeat button
 rep_song_off_icon = PhotoImage(file=r"Images/repeat_off.png")  # Adding an icon for the repeat song button
 rep_song_on_icon = PhotoImage(file=r"Images/repeat_on.png")  # Adding an icon for the repeat song button
-rep_song_btn = ttk.Button(right_frame, image=rep_song_off_icon, command=rep_song)  # A button to delete songs from the list
+rep_song_btn = ttk.Button(third_frame, image=rep_song_off_icon, command=rep_song)  # A button to delete songs from the list
 rep_song_btn.pack(pady=9)
 
+
+top_frame = ttk.Frame(second_frame)  # Second Top Frame
+top_frame.pack(pady=35)
 
 # Audio file details
 
@@ -330,12 +422,13 @@ check_val = False
 
 
 def stop_button():
-    global check_val
+    global check_val, allow_repeat
     if check_val:
         mixer.music.stop()
         status_bar["text"] = "Music stopped!"  # Setting the status as stopped
         audio_length["text"] = "Last played song:- " + os.path.basename(to_play)
         remaining_audio_time["text"] = ""
+        allow_repeat = False
     else:
         # Setting the status to show nothing is being played if user hits stop when no music is being played
         status_bar["text"] = "No music is being played to stop!"
@@ -366,7 +459,7 @@ def mute_music():
 
 
 # Creating a middle frame
-middle_frame = ttk.Frame(left_frame)
+middle_frame = ttk.Frame(second_frame)
 middle_frame.pack(padx=35, pady=35)
 
 # Play button
@@ -385,8 +478,8 @@ stop_btn = ttk.Button(middle_frame, image=stop_icon, command=stop_button)  # Add
 stop_btn.grid(row=0, column=2, padx=15)
 
 # Creating a bottom frame
-bottom_frame = ttk.Frame(left_frame)
-bottom_frame.pack(padx=15)
+bottom_frame = ttk.Frame(second_frame)
+bottom_frame.pack(padx=45)
 
 
 # Defining a button to restart music
