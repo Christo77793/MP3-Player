@@ -81,13 +81,17 @@ sub_menu.add_command(label="Exit", command=root_var.destroy)  # Creating a sub m
 # Defining a fn to display the following message on clicking About from Help
 def about_us():
     messagebox.showinfo("About MP3 Player", '''MP3 Player is a simple audio player, that was developed as a learning project.
+    
     Created By:- Christopher J.S.
+    
     If you wish to make a contribution to this software, email me at christo77793@gmail.com''')
 
 
 def lyrics_help():
     messagebox.showinfo("Lyrics FAQ", '''I used the PyLyrics module to display lyrics.
+    
     Website:- https://lyrics.fandom.com/wiki/LyricWiki
+    
     If no lyrics are shown despite the spelling being correct, look up for the song and artist name from the above website and try again.''')
 
 
@@ -113,13 +117,13 @@ lyrics_option_frame.pack(side=BOTTOM)
 singer_name = Label(lyrics_option_frame, text="Artist Name:")  # A label for the singer's name
 singer_name.grid(row=0, column=0, pady=15, padx=15)
 
-singer_name_input = Entry(lyrics_option_frame, background="lightgray")  # An entry to get singer's name
+singer_name_input = ttk.Entry(lyrics_option_frame, background="lightgray")  # An entry to get singer's name
 singer_name_input.grid(row=0, column=1, pady=15, padx=15)
 
 singer_song = Label(lyrics_option_frame, text="Song Name:")  # A label for the singer's song's name
 singer_song.grid(row=1, column=0, padx=15)
 
-singer_song_input = Entry(lyrics_option_frame, background="lightgray")  # An entry to get singer's song's name
+singer_song_input = ttk.Entry(lyrics_option_frame, background="lightgray")  # An entry to get singer's song's name
 singer_song_input.grid(row=1, column=1, padx=15)
 
 song_lyrics = "Please be connected to the internet to view lyrics!"
@@ -148,7 +152,7 @@ def show_lyrics():
     lyric_box.config(state=DISABLED)  # Users cannot edit textbox
 
 
-search = Button(lyrics_option_frame, text="Search Lyrics", command=show_lyrics)  # A button to show lyrics
+search = ttk.Button(lyrics_option_frame, text="Search Lyrics", command=show_lyrics)  # A button to show lyrics
 search.grid(row=2, column=0, pady=25)
 
 
@@ -162,7 +166,7 @@ def remove_lyrics():
     status_bar["text"] = "Lyrics removed!"
 
 
-remove = Button(lyrics_option_frame, text="Remove Lyrics", command=remove_lyrics)  # A button to remove lyrics
+remove = ttk.Button(lyrics_option_frame, text="Remove Lyrics", command=remove_lyrics)  # A button to remove lyrics
 remove.grid(row=2, column=1, pady=25)
 
 lyric_label = Label(first_frame, text="Enter the name of a song and it's artist to see it's lyrics")
@@ -291,7 +295,7 @@ rep_song_btn.pack(pady=5)
 
 
 top_frame = Frame(second_frame)  # Second Top Frame
-top_frame.pack(pady=35)
+top_frame.pack(pady=25)
 
 # Audio file details
 
@@ -300,6 +304,10 @@ audio_length.pack(pady=15, padx=5)
 
 remaining_audio_time = Label(top_frame, text="")  # Displays the current time of the audio
 remaining_audio_time.pack()
+
+
+middle_frame = Frame(second_frame)  # Second Middle Frame
+middle_frame.pack(padx=25, pady=25)
 
 
 # Defining a function to display audio details
@@ -400,6 +408,12 @@ def play_button(repeat):
             messagebox.showwarning("Warning", "No file has been selected to play!")
 
 
+# Play button
+play_icon = PhotoImage(file=r"Images/play-button.png")  # Adding an icon for the play button
+play_btn = Button(middle_frame, image=play_icon, bd=0, command=lambda: play_button(0))  # Adding the play button
+play_btn.grid(row=0, column=0, pady=25, padx=15)
+
+
 # Defining a button to pause music
 to_un_pause = False
 paused = False
@@ -413,6 +427,12 @@ def pause_button():
     if not paused:
         # Code to handle the case, in which the user intentionally or not pauses first without playing any music
         status_bar["text"] = "No music is being played to pause!"
+
+
+# Pause button
+pause_icon = PhotoImage(file=r"Images/pause-button.png")  # Adding an icon for the pause button
+pause_btn = Button(middle_frame, image=pause_icon, bd=0, command=pause_button)  # Adding the play button
+pause_btn.grid(row=0, column=1, pady=25, padx=15)
 
 
 # Defining a button to stop music
@@ -431,10 +451,29 @@ def stop_button():
         status_bar["text"] = "No music is being played to stop!"
 
 
-# Defining a scale to control the volume level
-def set_vol(val):
-    volume = float(val) / 100  # set_volume takes value only from 0-1
-    mixer.music.set_volume(volume)
+# Stop button
+stop_icon = PhotoImage(file=r"Images/stop-button.png")  # Adding an icon for the stop button
+stop_btn = Button(middle_frame, image=stop_icon, bd=0, command=stop_button)  # Adding the stop button
+stop_btn.grid(row=0, column=2, pady=25, padx=15)
+
+
+# Function to list number of times a song was heard {displays only if the count is > 1}
+def song_counter():
+    repeated_count = 0  # A variable to get the count of the no of times the user has heard a song
+    count_file = r"History/Song History.txt"
+    with open(count_file, "r+") as file:
+        content = file.read()
+        exact_file_name = os.path.basename(to_play)
+        if exact_file_name in content:
+            repeated_count = content.count(exact_file_name)
+            file.write(exact_file_name + "\n")
+        else:
+            file.write(exact_file_name + "\n")
+    return repeated_count
+
+
+bottom_frame = Frame(second_frame)  # Second Bottom Frame
+bottom_frame.pack(padx=25, pady=25)
 
 
 # Defining a button to mute/un-mute
@@ -455,69 +494,39 @@ def mute_music():
         muted = False
 
 
-middle_frame = Frame(second_frame)  # Second Middle Frame
-middle_frame.pack(padx=25, pady=35)
-
-# Play button
-play_icon = PhotoImage(file=r"Images/play-button.png")  # Adding an icon for the play button
-play_btn = Button(middle_frame, image=play_icon, bd=0, command=lambda: play_button(0))  # Adding the play button
-play_btn.grid(row=0, column=0, padx=15)
-
-# Pause button
-pause_icon = PhotoImage(file=r"Images/pause-button.png")  # Adding an icon for the pause button
-pause_btn = Button(middle_frame, image=pause_icon, bd=0, command=pause_button)  # Adding the play button
-pause_btn.grid(row=0, column=1, padx=15)
-
-# Stop button
-stop_icon = PhotoImage(file=r"Images/stop-button.png")  # Adding an icon for the stop button
-stop_btn = Button(middle_frame, image=stop_icon, bd=0, command=stop_button)  # Adding the stop button
-stop_btn.grid(row=0, column=2, padx=15)
-
-bottom_frame = Frame(second_frame)  # Second Bottom Frame
-bottom_frame.pack(pady=45)
-
-
-# Defining a button to restart music
-restart_time = False
-
-
-def rewind_button():
-    global restart_time
-    restart_time = True
-    mixer.music.rewind()
-
-
-# Function to list number of times a song was heard {displays only if the count is > 1}
-def song_counter():
-    repeated_count = 0  # A variable to get the count of the no of times the user has heard a song
-    count_file = r"History/Song History.txt"
-    with open(count_file, "r+") as file:
-        content = file.read()
-        exact_file_name = os.path.basename(to_play)
-        if exact_file_name in content:
-            repeated_count = content.count(exact_file_name)
-            file.write(exact_file_name + "\n")
-        else:
-            file.write(exact_file_name + "\n")
-    return repeated_count
-
-
-# Rewind button
-rewind_icon = PhotoImage(file=r"Images/restart-button.png")  # Adding an icon for the rewind button
-rewind_btn = Button(bottom_frame, image=rewind_icon, bd=0, command=rewind_button)  # Adding the stop button
-rewind_btn.grid(row=0, column=0, padx=15)
-
 # Mute/Un-mute Button
 mute_icon = PhotoImage(file=r"Images/mute-button.png")  # Adding an icon for the mute button
 un_mute_icon = PhotoImage(file=r"Images/un-mute-button.png")  # Adding an icon for the un-mute button
 volume_btn = Button(bottom_frame, image=un_mute_icon, bd=0, command=mute_music)  # Adding the mute/un-mute button
-volume_btn.grid(row=0, column=1, padx=5)
+volume_btn.grid(row=0, column=0, pady=25, padx=15)
+
+
+# Defining a scale to control the volume level
+def set_vol(val):
+    volume = float(val) / 100  # set_volume takes value only from 0-1
+    mixer.music.set_volume(volume)
+
 
 # Volume scale
 vol_control = ttk.Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, command=set_vol)  # Creating a volume scale
 vol_control.set(50)
 mixer.music.set_volume(0.5)
-vol_control.grid(row=0, column=2, pady=15, padx=30)
+vol_control.grid(row=0, column=1, pady=25, padx=15)
+
+# Defining a button to restart music
+restart_time = False
+
+
+def restart_song():
+    global restart_time
+    restart_time = True
+    mixer.music.rewind()
+
+
+# Restart button
+restart_icon = PhotoImage(file=r"Images/restart-button.png")  # Adding an icon for the rewind button
+restart_btn = Button(bottom_frame, image=restart_icon, bd=0, command=restart_song)  # Adding the stop button
+restart_btn.grid(row=0, column=2, pady=25, padx=15)
 
 
 # Modifying the close button of the GUI
