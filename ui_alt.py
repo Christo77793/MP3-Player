@@ -7,7 +7,6 @@ from pygame import mixer
 from tinytag import TinyTag
 from PyLyrics import *
 
-
 # GUI creation
 root_var = themetk.ThemedTk()  # Setting the the theme
 
@@ -113,7 +112,7 @@ first_frame.pack(side=LEFT, padx=15)
 
 # Creating the lyric box
 
-lyrics_option_frame = ttk.Frame(first_frame)  # Creating a separate frame to store user interactive options such as search or remove lyrics
+lyrics_option_frame = ttk.Frame(first_frame)  # Creating a separate frame to store user interactive options
 lyrics_option_frame.pack(side=BOTTOM)
 
 singer_name = ttk.Label(lyrics_option_frame, text="Artist Name:")  # A label for the singer's name
@@ -191,7 +190,7 @@ third_frame.pack(side=RIGHT, padx=15)
 # Creating a playlist
 
 playlist_frame = ttk.Frame(third_frame)  # A frame for the playlist box and it's dependencies
-playlist_frame.pack()
+playlist_frame.pack(side=TOP)
 
 
 playlist_array = []
@@ -200,23 +199,22 @@ playlist_box_scrollbar = ttk.Scrollbar(playlist_frame, orient=VERTICAL)  # Creat
 playlist_box = Listbox(playlist_frame, height=13, width=39, bd=0, background="lightgray", yscrollcommand=playlist_box_scrollbar.set)
 playlist_box_scrollbar.config(command=playlist_box.yview)  # Configuring the scrollbar
 playlist_box_scrollbar.pack(side=RIGHT, fill=Y)
-playlist_box.pack(pady=5, padx=5)
-
-playlist_label = ttk.Label(playlist_frame, text="Your playlist")
-playlist_label.pack(pady=5, padx=5)
+playlist_box.pack(pady=15, padx=5)
 
 
 playlist_option_frame = ttk.Frame(third_frame)  # A frame for the playlist box and it's dependencies
 playlist_option_frame.pack(padx=15)
 
+playlist_label = ttk.Label(playlist_option_frame, text="Your playlist")
+playlist_label.grid(row=0, column=1, pady=5, padx=15)
 
 add_song_icon = PhotoImage(file=r"Images/add_song.png")  # Adding an icon for the add songs button
 add_song_btn = ttk.Button(playlist_option_frame, image=add_song_icon, command=select_file)  # A button to add songs to the list
-add_song_btn.grid(row=0, column=0, pady=15, padx=15)
+add_song_btn.grid(row=1, column=0, pady=15, padx=5)
 
 del_song_icon = PhotoImage(file=r"Images/del_song.png")  # Adding an icon for the delete songs button
 del_song_btn = ttk.Button(playlist_option_frame, image=del_song_icon, command=del_file)  # A button to delete songs from the list
-del_song_btn.grid(row=0, column=2, pady=15, padx=15)
+del_song_btn.grid(row=1, column=2, pady=15, padx=5)
 
 
 # Defining a fn to repeat songs
@@ -298,7 +296,7 @@ def unloop_song(get_audio_time):
 rep_song_off_icon = PhotoImage(file=r"Images/repeat_off.png")  # Adding an icon for the repeat song button
 rep_song_on_icon = PhotoImage(file=r"Images/repeat_on.png")  # Adding an icon for the repeat song button
 rep_song_btn = ttk.Button(playlist_option_frame, image=rep_song_off_icon, command=rep_song)  # A button to delete songs from the list
-rep_song_btn.grid(row=0, column=1, pady=15, padx=15)
+rep_song_btn.grid(row=1, column=1, pady=15, padx=5)
 
 
 second_frame = ttk.Frame(root_var)  # Second Frame
@@ -310,61 +308,67 @@ top_frame.pack(pady=25)
 
 # Audio file details
 
-audio_length = ttk.Label(top_frame, text="Add a song to start listening to some music")  # Displays audio length in the play fn
-audio_length.pack(pady=15)
+last_played_song = ttk.Label(top_frame, text="Add a song to start listening to some music")  # Displays audio length in the play fn
+last_played_song.pack(pady=15)
 
-remaining_audio_time = ttk.Label(top_frame, text="")  # Displays the current time of the audio
-remaining_audio_time.pack()
+audio_times = ttk.Label(top_frame, text="")  # Displays the current time of the audio
+audio_times.pack()
 
 
 middle_frame = ttk.Frame(second_frame)  # Second Middle Frame
-middle_frame.pack(padx=35, pady=25)
+middle_frame.pack(padx=25, pady=25)
 
 
 # Defining a function to display audio details
-def audio_details(to_play):
-    file_extension = os.path.splitext(to_play)
+def audio_details():
+    try:
+        global file_time_span
 
-    if file_extension[1] == ".mp3":
-        sound_file = MP3(to_play)
-        file_time_span = sound_file.info.length
-    else:
-        sound_file = mixer.Sound(to_play)
-        file_time_span = sound_file.get_length()
+        current_time = mixer.music.get_pos() / 1000  # Getting the current position of the song
 
-    mins, secs = divmod(file_time_span, 60)
-    mins = round(mins)
-    secs = round(secs)
-    time_format = "{:02d}:{:02d}".format(mins, secs)
-    audio_length["text"] = "Audio Length:- " + time_format
+        selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
+        selected_song = int(selected_song[0])  # Converts tuple to int
+        to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
 
-    # Applying the concept of threads to isolate the execution of the while loop in the start_count fn
-    t1 = threading.Thread(target=start_count, args=(file_time_span,))
-    t1.start()
+        file_extension = os.path.splitext(to_play)
 
-
-# Defining a function to display the current time of the audio
-def start_count(test):
-    global to_un_pause, restart_time
-    current_time = 0
-    while current_time <= test and mixer.music.get_busy():
-        if to_un_pause:
-            continue
+        if file_extension[1] == ".mp3":
+            sound_file = MP3(to_play)
+            file_time_span = sound_file.info.length
         else:
-            if restart_time:
-                current_time = 0
-                restart_time = False
-            else:
-                pass
-            mins, secs = divmod(current_time, 60)
-            mins = round(mins)
-            secs = round(secs)
-            current_time_format = "{:02d}:{:02d}".format(mins, secs)
-            remaining_audio_time["text"] = "Currently at- " + current_time_format
-            time.sleep(1)
-            current_time += 1
-    remaining_audio_time["text"] = ""
-    audio_length["text"] = "Last played song:- " + os.path.basename(to_play)
+            sound_file = mixer.Sound(to_play)
+            file_time_span = sound_file.get_length()
+
+        total_time = time.strftime("%H:%M:%S", time.gmtime(file_time_span))  # Converting the total time to a time format
+
+        current_time += 1
+
+        if int(song_slider.get()) == int(file_time_span):
+            last_played_song["text"] = "Last played song:- " + os.path.basename(to_play)
+            audio_times["text"] = ""
+
+        elif int(song_slider.get()) == int(current_time):  # Song slider has not been moved
+
+            song_slider.config(to=int(file_time_span), value=int(current_time))  # Adjusting the slider position as the song furthers
+            converted_current_time = time.strftime("%H:%M:%S", time.gmtime(current_time))  # Converting it to a time format
+            audio_times["text"] = f"Time elapsed:- {converted_current_time} of {total_time}"
+
+        else:  # Song slider has been moved
+
+            song_slider.config(to=int(file_time_span), value=int(song_slider.get()))  # Adjusting the slider position as the song furthers
+            converted_current_time = time.strftime("%H:%M:%S", time.gmtime(int(song_slider.get())))  # Converting it to a time format
+            audio_times["text"] = f"Time elapsed:- {converted_current_time} of {total_time}"
+
+            temp_var = int(song_slider.get()) + 1  # Incrementing the slider as we move along
+            song_slider.config(value=temp_var)
+
+        if mixer.music.get_busy():
+            audio_times.after(1000, audio_details)  # Calling the fn every one second
+        else:
+            audio_times["text"] = ""
+
+    except NameError:
+        print("No song is being played to move the song position!")
 
 
 # Defining a button to play music
@@ -372,7 +376,7 @@ song_heard = 0
 
 
 def play_button(repeat):
-    global to_un_pause, paused, check_val, allow_repeat, to_play, song_heard
+    global to_un_pause, paused, check_val, allow_repeat, to_play, song_heard, file_time_span
     if to_un_pause:
         mixer.music.unpause()  # Resumes the music from when it was paused
         to_un_pause = False
@@ -392,7 +396,7 @@ def play_button(repeat):
     else:
         try:
             mixer.music.stop()
-            time.sleep(1)
+            mixer.music.unload()
 
             selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
             selected_song = int(selected_song[0])  # Converts tuple to int
@@ -404,16 +408,20 @@ def play_button(repeat):
             song_metadata = TinyTag.get(to_play)
             bitrate = song_metadata.bitrate
             song_offset = song_metadata.audio_offset
-            audio_details(to_play)
+            audio_details()
 
             check_val = True
             paused = True
             allow_repeat = True
+
+
             song_heard = song_counter()
             if song_heard > 1:
                 status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset) + " | You have heard this song " + str(song_heard) + " times"
             else:
                 status_bar["text"] = "Bitrate: " + str(bitrate) + " | Audio Offset: " + str(song_offset)
+
+            last_played_song["text"] = ""
 
         except Exception:
             # Since no file has been selected the following code will be executed
@@ -456,9 +464,12 @@ def stop_button():
     if check_val:
         mixer.music.stop()
         status_bar["text"] = "Music stopped!"  # Setting the status as stopped
-        audio_length["text"] = "Last played song:- " + os.path.basename(to_play)
-        remaining_audio_time["text"] = ""
+        last_played_song["text"] = "Last played song:- " + os.path.basename(to_play)
+        audio_times["text"] = ""
+
         allow_repeat = False
+
+        song_slider.config(value=0)  # Setting the slider to the beginning when a song is stopped
     else:
         # Setting the status to show nothing is being played if user hits stop when no music is being played
         status_bar["text"] = "No music is being played to stop!"
@@ -468,6 +479,31 @@ def stop_button():
 stop_icon = PhotoImage(file=r"Images/stop-button.png")  # Adding an icon for the stop button
 stop_btn = ttk.Button(middle_frame, image=stop_icon, command=stop_button)  # Adding the stop button
 stop_btn.grid(row=0, column=2, pady=25, padx=15)
+
+
+slider_frame = ttk.Frame(second_frame)  # Creating a seperate frame for the song slider
+slider_frame.pack()
+
+
+# Defining a scale to slide song
+def slide_song(x):
+    try:
+        global file_time_span
+
+        selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
+        selected_song = int(selected_song[0])  # Converts tuple to int
+        to_play = playlist_array[selected_song]  # Provides the file path from the playlist array
+
+        mixer.music.load(to_play)
+        mixer.music.play(loops=0, start=int(song_slider.get()))
+
+    except IndexError:
+        print("No song is being played to move the song position!")
+
+
+# Song slider
+song_slider = ttk.Scale(slider_frame, from_=0, to_=100, value=0, orient=HORIZONTAL, command=slide_song, length=310)
+song_slider.pack()
 
 
 # Function to list number of times a song was heard {displays only if the count is > 1}
@@ -525,22 +561,6 @@ vol_control = ttk.Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, comman
 vol_control.set(50)
 mixer.music.set_volume(0.5)
 vol_control.grid(row=0, column=1, pady=25, padx=15)
-
-
-# Defining a button to restart music
-restart_time = False
-
-
-def restart_song():
-    global restart_time
-    restart_time = True
-    mixer.music.rewind()
-
-
-# Restart button
-restart_icon = PhotoImage(file=r"Images/restart-button.png")  # Adding an icon for the rewind button
-restart_btn = ttk.Button(bottom_frame, image=restart_icon, command=restart_song)  # Adding the stop button
-restart_btn.grid(row=0, column=2, pady=25, padx=15)
 
 
 # Modifying the close button of the GUI
