@@ -396,7 +396,6 @@ def play_button(repeat):
     else:
         try:
             mixer.music.stop()
-            mixer.music.unload()
 
             selected_song = playlist_box.curselection()  # Returns a tuple of with index no.
             selected_song = int(selected_song[0])  # Converts tuple to int
