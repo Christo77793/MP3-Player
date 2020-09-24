@@ -1,5 +1,4 @@
-# MP3-Player; As of now this is the program's name. Once I finalize on a name for the software, necessary changes will be made.
-
+# MP3-Player
 <img src="Screenshots/Screenshot%20%231.png" height=450, wight=450>
 
 There are 2 main files for the program, main.py and ui_alt.py
